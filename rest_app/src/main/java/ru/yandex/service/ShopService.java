@@ -1,31 +1,14 @@
 package ru.yandex.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
-import ru.yandex.repository.ShopUnitRepository;
+import ru.yandex.dto.ShopUnitImport;
+import ru.yandex.dto.ShopUnitImportRequest;
+import ru.yandex.models.Unit;
 
-import javax.annotation.PostConstruct;
+import java.sql.Timestamp;
+import java.util.List;
 
-@Service
-public class ShopService {
-    private ShopUnitRepository repository;
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public ShopService(ShopUnitRepository repository, JdbcTemplate jdbcTemplate) {
-        this.repository = repository;
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    @PostConstruct
-    @Autowired
-    public void init() {
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS goods;");
-        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS goods.unit (\n" +
-                "id bigserial primary key,\n" +
-                "uid varchar(50) not null unique,\n" +
-                "name varchar(50) not null unique,\n" +
-                "password varchar(100) not null);");
-    }
+public interface ShopService {
+    void create(ShopUnitImport unit, Timestamp timestamp);
+    void createAll(ShopUnitImportRequest importRequest);
+    List<Unit> findAll();
 }

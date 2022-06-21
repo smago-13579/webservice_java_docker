@@ -1,0 +1,16 @@
+db:
+  url: jdbc:postgresql://localhost:5432/postgres
+  user: postgres
+  password: postgres
+  driver:
+    name: org.postgresql.Driver
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100000
+
+server:
+  port: 80

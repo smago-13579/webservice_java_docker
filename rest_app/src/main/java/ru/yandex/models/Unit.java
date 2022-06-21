@@ -1,25 +1,31 @@
 package ru.yandex.models;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import ru.yandex.dto.ShopUnitType;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
 @Table(schema = "goods", name = "unit")
 public class Unit {
-    @Id
-    @GeneratedValue
+    @Column(name = "id")
     private Long id;
 
-    @Column(name = "type")
-    private ShopUnitType type;
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "uid")
     private String uid;
+
+    @Column(name = "type")
+    private String type;
 
     @Column(name = "name")
     private String name;
@@ -31,10 +37,13 @@ public class Unit {
     private Long price;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parentId")
+    @JoinColumn(name = "parent_id")
     private Unit parentId;
 
     @OneToMany(mappedBy = "parentId",
             cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Unit> children;
+
+    @Transient
+    private String parentIdValue;
 }
