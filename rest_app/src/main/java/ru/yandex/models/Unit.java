@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
@@ -31,7 +31,7 @@ public class Unit {
     private String name;
 
     @Column(name = "date")
-    private Timestamp date;
+    private LocalDateTime date;
 
     @Column(name = "price")
     private Long price;
