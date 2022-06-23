@@ -73,12 +73,6 @@ public class ShopServiceImpl implements ShopService {
             }
             updateParentDate(optUnit.get(), date);
         }
-        //TODO need update children?
-//        if (ShopUnitType.CATEGORY == unit.getType()) {
-//            List<Unit> units = repository.findAllByParentId(unit.getId());
-//            units = serviceUtils.findAll(units);
-//            repository.saveAll(units);
-//        }
     }
 
     @Transactional

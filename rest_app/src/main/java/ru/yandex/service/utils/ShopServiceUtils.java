@@ -56,19 +56,6 @@ public class ShopServiceUtils {
         return allUnits;
     }
 
-    public ArrayList<Unit> findAll(List<Unit> units) {
-        ArrayList<Unit> allUnits = new ArrayList<>();
-
-        for (Unit unit : units) {
-            if (ShopUnitType.CATEGORY.toString().equals(unit.getType())
-                    && unit.getChildren() != null) {
-                allUnits.addAll(findAllOffers(unit.getChildren()));
-            }
-            allUnits.add(unit);
-        }
-        return allUnits;
-    }
-
     public DateTimeFormatter getFormatter() {
         return formatter;
     }
