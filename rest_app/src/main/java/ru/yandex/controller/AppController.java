@@ -5,9 +5,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.dto.*;
 import ru.yandex.dto.Error;
-import ru.yandex.dto.ShopUnit;
-import ru.yandex.dto.ShopUnitImportRequest;
 import ru.yandex.exception.ItemNotFoundException;
 import ru.yandex.exception.RequestErrorException;
 import ru.yandex.service.ShopService;
@@ -60,6 +59,37 @@ public class AppController {
         } catch (ItemNotFoundException e) {
             return new ResponseEntity<>(new Error(404, e.getMessage()),
                     getJsonHeaders(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/sales")
+    public ResponseEntity getSales(@RequestParam("date") String date) {
+        try {
+            ShopUnitStatisticResponse responseBody = shopService.getSales(date);
+
+            return new ResponseEntity<>(responseBody,
+                    getJsonHeaders(), HttpStatus.OK);
+        } catch (RequestErrorException e) {
+            return new ResponseEntity<>(new Error(400, e.getMessage()),
+                    getJsonHeaders(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/node/{id}/statistic")
+    public ResponseEntity getStatistic(@PathVariable("id") String id,
+                                   @RequestParam(value = "dateStart", required = false) String dateStart,
+                                   @RequestParam(value = "dateEnd", required = false) String dateEnd) {
+        try {
+            ShopUnitStatisticResponse responseBody = shopService.getStatistic(id ,dateStart, dateEnd);
+
+            return new ResponseEntity<>(responseBody,
+                    getJsonHeaders(), HttpStatus.OK);
+        } catch (ItemNotFoundException e) {
+            return new ResponseEntity<>(new Error(404, e.getMessage()),
+                    getJsonHeaders(), HttpStatus.NOT_FOUND);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(new Error(400, e.getMessage()),
+                    getJsonHeaders(), HttpStatus.BAD_REQUEST);
         }
     }
 

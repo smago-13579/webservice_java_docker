@@ -7,22 +7,22 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Entity
-@Table(schema = "goods", name = "unit")
-public class Unit {
+@Table(schema = "goods", name = "statistic")
+public class Statistic {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "uid")
-    private String uid;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uid")
+    private Unit uid;
 
     @Column(name = "type")
     private String type;
@@ -36,11 +36,6 @@ public class Unit {
     @Column(name = "price")
     private Long price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Unit parentId;
-
-    @OneToMany(mappedBy = "parentId",
-            cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Unit> children;
+    @Column(name = "parent_id")
+    private String parentId;
 }

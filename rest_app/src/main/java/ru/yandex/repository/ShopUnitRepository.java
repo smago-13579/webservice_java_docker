@@ -22,4 +22,7 @@ public interface ShopUnitRepository extends CrudRepository<Unit, String> {
     Long insertOrUpdate(@Param("uid") String uid, @Param("type") String type,
                         @Param("name") String name, @Param("date") LocalDateTime date,
                         @Param("price") Long price, @Param("parent_id") String parent_id);
+
+    @Query(value = "select * from goods.unit where date between :start and :end", nativeQuery = true)
+    List<Unit> findAllByDateInterval(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

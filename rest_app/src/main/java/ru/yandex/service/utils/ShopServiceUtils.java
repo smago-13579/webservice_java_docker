@@ -14,7 +14,7 @@ public class ShopServiceUtils {
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'")
             .withZone(ZoneId.of("UTC"));
 
-    public ArrayList<ShopUnit> mapEntityToJson(List<Unit> children, String uid) {
+    public ArrayList<ShopUnit> mapEntityToShopUnit(List<Unit> children, String uid) {
         if (children == null) {
             return null;
         }
@@ -23,7 +23,7 @@ public class ShopServiceUtils {
                     unit.getDate().format(formatter), uid, unit.getPrice(), null);
 
             if (ShopUnitType.CATEGORY.toString().equals(unit.getType())) {
-                shopUnit.setChildren(mapEntityToJson(unit.getChildren(), unit.getUid()));
+                shopUnit.setChildren(mapEntityToShopUnit(unit.getChildren(), unit.getUid()));
                 shopUnit.setPrice(findAveragePrice(unit.getChildren()));
             }
             return shopUnit;

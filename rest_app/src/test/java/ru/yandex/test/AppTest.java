@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
@@ -18,6 +19,7 @@ import ru.yandex.dto.ShopUnit;
 import ru.yandex.models.Unit;
 import ru.yandex.repository.ShopUnitRepository;
 import ru.yandex.service.ShopService;
+import ru.yandex.test.config.TestConfig;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,6 +33,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = App.class, webEnvironment = WebEnvironment.RANDOM_PORT)
+@Import(TestConfig.class)
 public class AppTest {
 
     @LocalServerPort
