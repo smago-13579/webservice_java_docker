@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -63,29 +64,50 @@ public class ShopServiceImpl implements ShopService {
                 "parent_id varchar(50));");
     }
 
+    private void updateStatistics(ArrayList<ShopUnitImport> items, LocalDateTime date) {
+        items.forEach(unit -> statRepository.insert(unit.getId(), unit.getType().toString(), unit.getName(),
+                date, unit.getPrice(), unit.getParentId()));
+        List<ShopUnitImport> imParents = items.stream().filter(unit -> unit.getParentId() != null)
+                .collect(Collectors.toList());
+        ArrayList<Unit> parents = new ArrayList<>();
+
+        for (ShopUnitImport unitImport : imParents) {
+            if (items.stream().anyMatch(u -> Objects.equals(u.getId(), unitImport.getParentId()))) {
+                continue;
+            }
+            Optional<Unit> optUnit = unitRepository.findById(unitImport.getParentId());
+            Unit unit = optUnit.get();
+
+            while (unit != null && !parents.contains(unit)) {
+                parents.add(unit);
+                unit = unit.getParentId();
+            }
+        }
+
+        if (parents.size() > 0) {
+            parents.forEach(u -> u.setDate(date));
+            parents.forEach(unit -> {
+                String parentId = unit.getParentId() == null ? null : unit.getParentId().getUid();
+                statRepository.insert(unit.getUid(), unit.getType(), unit.getName(),
+                        date, unit.getPrice(), parentId);
+            });
+        }
+    }
+
     private void updateParentDate(Unit unit, LocalDateTime date) {
-        String parentId = unit.getParentId() == null ? null : unit.getParentId().getUid();
         unit.setDate(date);
         unitRepository.save(unit);
-        statRepository.insert(unit.getUid(), unit.getType(), unit.getName(),
-                date, unit.getPrice(), parentId);
 
         while (unit.getParentId() != null) {
             unit = unit.getParentId();
             unit.setDate(date);
             unitRepository.save(unit);
-
-            parentId = unit.getParentId() == null ? null : unit.getParentId().getUid();
-            statRepository.insert(unit.getUid(), unit.getType(), unit.getName(),
-                    date, unit.getPrice(), parentId);
         }
     }
 
     @Override
     public void create(ShopUnitImport unit, LocalDateTime date) {
         unitRepository.insertOrUpdate(unit.getId(), unit.getType().toString(), unit.getName(),
-                date, unit.getPrice(), unit.getParentId());
-        statRepository.insert(unit.getId(), unit.getType().toString(), unit.getName(),
                 date, unit.getPrice(), unit.getParentId());
 
         if (unit.getParentId() != null) {
@@ -112,6 +134,7 @@ public class ShopServiceImpl implements ShopService {
                 throw new RuntimeException();
             }
             items.forEach(unit -> create(unit, date));
+            updateStatistics(items, date);
         } catch (RuntimeException e) {
             throw new RequestErrorException("Validation Failed");
         }

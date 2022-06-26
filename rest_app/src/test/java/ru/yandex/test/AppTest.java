@@ -46,22 +46,22 @@ public class AppTest {
     ShopService shopService;
 
     @Autowired
-    ShopUnitRepository repository;
+    ShopUnitRepository unitRepository;
 
     static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'")
             .withZone(ZoneId.of("UTC"));
 
-    static final java.lang.String uidOne = "2e62c221-a62b-426c-820c-6f81e24fdbcc";
+    static final String uidOne = "2e62c221-a62b-426c-820c-6f81e24fdbcc";
 
     static final LocalDateTime lOne = LocalDateTime.now().withNano(3);
     static final LocalDateTime lTwo = LocalDateTime.now().minusDays(10).withNano(3);
     static final LocalDateTime lThree = LocalDateTime.now().minusDays(30).withNano(3);
     static final LocalDateTime lFour = LocalDateTime.now().minusDays(40).withNano(3);
-    static final java.lang.String URL = "http://localhost:";
+    static final String URL = "http://localhost:";
 
     @AfterEach
     void deleteAll() {
-        repository.deleteAll();
+        unitRepository.deleteAll();
     }
 
     @Test
@@ -74,7 +74,7 @@ public class AppTest {
                 .build();
 
         shopService.create(unitImport, lOne);
-        Unit unit = repository.findById(uidOne).get();
+        Unit unit = unitRepository.findById(uidOne).get();
         assertNotNull(unit);
     }
 
@@ -88,7 +88,7 @@ public class AppTest {
                 .build();
 
         shopService.create(unitImport, lOne);
-        Unit unit = repository.findById(uidOne).get();
+        Unit unit = unitRepository.findById(uidOne).get();
         assertNotNull(unit);
         assertNotNull(unit.getId());
         assertEquals(unit.getName(), "newTV");
@@ -101,7 +101,7 @@ public class AppTest {
     void createManyUnits() {
         ArrayList<ShopUnitImport> list = new ArrayList<>();
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000; i++) {
             list.add(ShopUnitImport.builder()
                     .type(ShopUnitType.OFFER)
                     .id(UUID.randomUUID().toString())
@@ -116,10 +116,10 @@ public class AppTest {
 
     @Test
     void simpleImportTest() throws URISyntaxException {
-        java.lang.String categoryUid = UUID.randomUUID().toString();
-        java.lang.String offerUidOne = UUID.randomUUID().toString();
-        java.lang.String offerUidTwo = UUID.randomUUID().toString();
-        java.lang.String offerUidThree = UUID.randomUUID().toString();
+        String categoryUid = UUID.randomUUID().toString();
+        String offerUidOne = UUID.randomUUID().toString();
+        String offerUidTwo = UUID.randomUUID().toString();
+        String offerUidThree = UUID.randomUUID().toString();
 
         ShopUnitImport categoryOne = new ShopUnitImport(ShopUnitType.CATEGORY, categoryUid,
                 "Mobile_Phones", null, null);
@@ -133,14 +133,14 @@ public class AppTest {
 
         RequestEntity<ShopUnitImportRequest> request = new RequestEntity<>(
                 new ShopUnitImportRequest(list, lTwo.format(formatter)), HttpMethod.POST, new URI(URL));
-        ResponseEntity<java.lang.String> response = restTemplate.postForEntity(URL + port + "/imports",
-                request, java.lang.String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(URL + port + "/imports",
+                request, String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 
     @Test
     void itemNotFoundTest() throws URISyntaxException {
-        java.lang.String categoryUid = UUID.randomUUID().toString();
+        String categoryUid = UUID.randomUUID().toString();
 
         RequestEntity<Object> request = new RequestEntity<>(HttpMethod.DELETE, new URI(URL));
         ResponseEntity<Error> response = restTemplate.exchange(URL + port + "/delete/" + categoryUid,
@@ -150,10 +150,10 @@ public class AppTest {
 
     @Test
     void deleteCategoryItem() throws URISyntaxException {
-        java.lang.String categoryUid = UUID.randomUUID().toString();
-        java.lang.String offerUidOne = UUID.randomUUID().toString();
-        java.lang.String offerUidTwo = UUID.randomUUID().toString();
-        java.lang.String offerUidThree = UUID.randomUUID().toString();
+        String categoryUid = UUID.randomUUID().toString();
+        String offerUidOne = UUID.randomUUID().toString();
+        String offerUidTwo = UUID.randomUUID().toString();
+        String offerUidThree = UUID.randomUUID().toString();
 
         ShopUnitImport categoryOne = new ShopUnitImport(ShopUnitType.CATEGORY, categoryUid,
                 "Mobile_Phones", null, null);
@@ -168,16 +168,16 @@ public class AppTest {
         RequestEntity<ShopUnitImportRequest> requestOne = new RequestEntity<>(
                 new ShopUnitImportRequest(list, lTwo.format(formatter)), HttpMethod.POST, new URI(URL));
         restTemplate.postForEntity(URL + port + "/imports",
-                requestOne, java.lang.String.class);
+                requestOne, String.class);
 
         RequestEntity<Object> requestTwo = new RequestEntity<>(HttpMethod.DELETE, new URI(URL));
-        ResponseEntity<java.lang.String> response = restTemplate.exchange(URL + port + "/delete/" + categoryUid,
-                HttpMethod.DELETE, requestTwo, java.lang.String.class);
+        ResponseEntity<String> response = restTemplate.exchange(URL + port + "/delete/" + categoryUid,
+                HttpMethod.DELETE, requestTwo, String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 
     @Test
-    void findById() {
+    void getDataWithId() throws URISyntaxException {
         ArrayList<ShopUnitImport> list = new ArrayList<>();
         list.add(new ShopUnitImport(ShopUnitType.CATEGORY, "3fa85f00",
                 "Electronic_Arts", null, null));
@@ -211,8 +211,136 @@ public class AppTest {
         }
         ShopUnitImportRequest importRequest = new ShopUnitImportRequest(list, lOne.format(formatter));
         shopService.createAll(importRequest);
-        ShopUnit unit = shopService.getUnit("3fa85f00");
+        RequestEntity<Object> request = new RequestEntity<>(HttpMethod.GET, new URI(""));
+        ResponseEntity<ShopUnit> response = restTemplate.exchange(URL + port + "/nodes/3fa85f00",
+                HttpMethod.GET, request, ShopUnit.class);
+        ShopUnit body = response.getBody();
 
-        assertNotNull(unit);
+        assertNotNull(body);
+        assertNotNull(body.getChildren());
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+    }
+
+    @Test
+    void getSalesWithDateExecuteManyQueries() {
+        createUnits();
+
+        ArrayList<TestRequest> requests = new ArrayList<>();
+
+        for (int i = 0; i < 100; i++) {
+            requests.add(new TestRequest(i, restTemplate, URL + port + "/sales?date=" + lOne.format(formatter),
+                    HttpMethod.GET, ShopUnitStatisticResponse.class));
+        }
+        requests.forEach(TestRequest::start);
+        requests.forEach(t -> {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                System.err.println(e.getMessage());
+            }
+        });
+
+        for (TestRequest request : requests) {
+            ResponseEntity<ShopUnitStatisticResponse> response = request.getResponse();
+            ShopUnitStatisticResponse body = (ShopUnitStatisticResponse)request.getResponse().getBody();
+            assertNotNull(body);
+            assertNotNull(body.getItems());
+            assertEquals(11, body.getItems().size());
+            assertEquals(response.getStatusCode(), HttpStatus.OK);
+        }
+    }
+
+    @Test
+    void getStatisticWithDatesExecuteManyQueries() {
+        createUnitImportRequests();
+
+        ArrayList<TestRequest> requests = new ArrayList<>();
+
+        for (int i = 0; i < 100; i++) {
+            requests.add(new TestRequest(i, restTemplate, URL + port + "/node/3fa85f00/statistic?dateStart="
+                    + lOne.minusDays(10).format(formatter) + "&dateEnd=" + lOne.format(formatter),
+                    HttpMethod.GET, ShopUnitStatisticResponse.class));
+        }
+        requests.forEach(TestRequest::start);
+        requests.forEach(t -> {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                System.err.println(e.getMessage());
+            }
+        });
+
+        for (TestRequest request : requests) {
+            ResponseEntity<ShopUnitStatisticResponse> response = request.getResponse();
+            ShopUnitStatisticResponse body = (ShopUnitStatisticResponse)request.getResponse().getBody();
+            assertNotNull(body);
+            assertNotNull(body.getItems());
+            assertEquals(4, body.getItems().size());
+            assertEquals(response.getStatusCode(), HttpStatus.OK);
+        }
+    }
+
+    void createUnits() {
+        unitRepository.insertOrUpdate("3fa85f00", ShopUnitType.CATEGORY.toString(), "Electronic_Arts",
+                lOne, null, null);
+        unitRepository.insertOrUpdate("3fa85f10", ShopUnitType.CATEGORY.toString(), "Mobile_Phones",
+                lOne.minusHours(33), null, "3fa85f00");
+        unitRepository.insertOrUpdate("3fa85f20", ShopUnitType.CATEGORY.toString(), "Mobile_Phones",
+                lOne.minusHours(25), null, "3fa85f10");
+        unitRepository.insertOrUpdate("3fa85f30", ShopUnitType.CATEGORY.toString(), "Mobile_Phones",
+                lOne.minusHours(38), null, "3fa85f10");
+
+        for (int i = 0; i < 10; i++) {
+            unitRepository.insertOrUpdate(UUID.randomUUID().toString(), ShopUnitType.OFFER.toString(), "mobile",
+                    lOne.minusHours(28), 100L, "3fa85f30");
+        }
+
+        for (int i = 0; i < 10; i++) {
+            unitRepository.insertOrUpdate(UUID.randomUUID().toString(), ShopUnitType.OFFER.toString(), "mobile",
+                    lOne.minusHours(18), 1500L, "3fa85f10");
+        }
+    }
+
+    void createUnitImportRequests() {
+        ArrayList<ShopUnitImport> items = new ArrayList<>();
+
+        items.add(new ShopUnitImport(ShopUnitType.CATEGORY, "3fa85f00",
+                "Electronic_Arts", null, null));
+        items.add(new ShopUnitImport(ShopUnitType.CATEGORY, "3fa85f10",
+                "Mobile_Phones", "3fa85f00", null));
+        items.add(new ShopUnitImport(ShopUnitType.CATEGORY, "3fa85f20",
+                "Mobile_Phones", "3fa85f10", null));
+        items.add(new ShopUnitImport(ShopUnitType.CATEGORY, "3fa85f30",
+                "Mobile_Phones", "3fa85f10", null));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(30).format(formatter)));
+        items.clear();
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(25).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(20).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(15).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(10).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(5).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(3).format(formatter)));
+
+        items.add(new ShopUnitImport(ShopUnitType.OFFER, UUID.randomUUID().toString(), "mobile",
+                "3fa85f30", 100L));
+        shopService.createAll(new ShopUnitImportRequest(items, lOne.minusDays(1).format(formatter)));
     }
 }
